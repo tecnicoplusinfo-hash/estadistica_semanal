@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TRABAJADOR
+}
+
+enum StatType {
+  SERVICIOS
+  RESENAS
+  PAGINAS
+  TARJETAS
+  LLAVES
+}
+
+enum PageType {
+  DIRECTORIOS
+  PAGINAS
+  OTROS
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  password     String
+  name         String
+  role         Role       @default(TRABAJADOR)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  statistics   Statistic[]
+}
+
+model Local {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  statistics   Statistic[]
+}
+
+model Statistic {
+  id           String     @id @default(uuid())
+  userId       String
+  localId      String
+  type         StatType
+  quantity     Int
+  pageType     PageType?
+  weekNumber   Int
+  year         Int
+  createdAt    DateTime   @default(now())
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  local        Local      @relation(fields: [localId], references: [id], onDelete: Cascade)
+
+  @@index([userId, weekNumber, year])
+  @@index([localId, weekNumber, year])
+  @@index([type, weekNumber, year])
+}
